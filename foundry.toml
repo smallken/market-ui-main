@@ -8,3 +8,12 @@ libs = [
 remappings = ["@openzeppelin/=node_modules/@openzeppelin/"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[rpc_endpoints]
+anvil = "${ANVIL_RPC_URL}"
+
+[etherscan]
+# anvil = { key = "${ANVILSCAN_API_KEY}" }
+
+
+# mumbai = "${MUMBAI_RPC_URL}"
