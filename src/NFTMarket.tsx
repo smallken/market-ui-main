@@ -3,28 +3,15 @@ import { ethers } from "ethers";
 import erc20TokenAbi from "./abis/erc20TokenAbi.json"
 
 import erc721abi from "./abi/erc721Abi.json";
+// import erc721abi from "../out/ERC721/ERC721.sol/ERC721.json";
 import erc2612abi from "./abi/erc2612Abi.json";
 import nftMarketabi from "./abi/nftmarketAbi.json";
 
-
-// const nftMarketAddress = "0x133Da5ED5B39FBBe9E153406Ed5c1E4F4e034281"
-// 用本地测试网
-// const nftMarketAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
-// const erc721Address = "0x4a3D41846A1395f9F227cf00d4c0ce99FBeFB9aA"
-// 用本地测试网：0x5FbDB2315678afecb367f032d93F642f64180aa3
-// const erc721Address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
-// const erc2612Address = "0xb1aA5CCc592425990aaBc3CD2fD3cF6453FBa88e"
-// const erc2612Address = "0x8dD97203405EfAb4BA0F01C64D741365D0088AbD"
-// 用的goril网络：0xb80478E7346dca0Ec4b05b60200d5F4F3125136f
-// const erc2612Address = "0xb80478E7346dca0Ec4b05b60200d5F4F3125136f"
-// 用本地测试网
-// const erc2612Address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
-// 用mumbai测试网  0x01329dF60d1252F04f2316C203b9863A47172752
-const nftMarketAddress = "0xC5f4872C7F008C0811ebECDb8F5eB50ECa515766"
-const erc721Address = "0x49d9603C8A0F14a678b7fFf8efd93f88Bb3f0DE0"
-const erc2612Address = "0x01329dF60d1252F04f2316C203b9863A47172752"
+const nftMarketAddress = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"
+const erc721Address = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+const erc2612Address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
 // 用anvil本地网络
-
+// 部署合约为：0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
 
 
@@ -162,8 +149,82 @@ function NFTMarket() {
             console.log("erc20Contrct is null");
             return;
         }
-        await erc20Contrct.transfer(address, totalTransfer);
+        // erc20Contrct.approve(address,totalTransfer);
+        // 这里不用approve，因为默认单位是wei，所以把输入来的转成wei
+        const weiValue = ethers.parseEther(totalTransfer);
+        console.log("transefer:", weiValue);
+        await erc20Contrct.transfer(address, weiValue);
     }
+
+    const permit = async () => {
+        if (erc20Contrct == null) {
+            console.log("erc20Contrct is null");
+            return;
+        }
+        // const nonce = await token?.read.nonces([address]);
+        // console.log("nonce:" + nonce);
+    
+        // const deadline = BigInt(Math.floor(Date.now() / 1000) + 100_000);    
+        // const amount = parseUnits('1', 18);
+    
+        // const chainId = await publicClient.getChainId();
+        
+        // const domainData : TypedDataDomain =  {
+        //     name: 'ERC2612',
+        //     version: '1',
+        //     chainId: chainId,
+        //     verifyingContract: erc2612Address
+        // }
+        // const types = {
+        //     Permit: [
+        //       {name: "owner", type: "address"},
+        //       {name: "spender", type: "address"},
+        //       {name: "value", type: "uint256"},
+        //       {name: "nonce", type: "uint256"},
+        //       {name: "deadline", type: "uint256"}
+        //     ]
+        // }
+    
+        // const message = {
+        //     owner: address,
+        //     spender: tokenBankAddress,
+        //     value: amount,
+        //     nonce,
+        //     deadline
+        // }
+    
+        // const signature = await walletClient.signTypedData({
+        //   account: address,
+        //   domain: domainData,
+        //   types,
+        //   primaryType: 'Permit',
+        //   message: message,
+        // })
+    
+        // console.log(signature);
+    
+        // const [r, s, v] = [
+        //   slice(signature, 0, 32),
+        //   slice(signature, 32, 64),
+        //   slice(signature, 64, 65),
+        // ];
+    
+        // const hash = await tokenBank.write.permitDeposit([address, amount, deadline, hexToNumber(v), r, s],   
+        //   {account: address})
+    
+        // console.log(`deposit hash: ${hash} `);
+    
+        // await publicClient.getTransactionReceipt({
+        //   hash: hash
+        // })
+    
+        // refreshDeposited();
+        // // erc20Contrct.depoistePermit();
+        // signer?.signTypedData();
+
+
+    }
+
 
     const mintNFT = async () => {
 
@@ -280,6 +341,9 @@ function NFTMarket() {
                 <br />
                 <button onClick={transfer}>Transfer</button>
             </div>
+            <br></br>
+                <h2>Permit</h2>
+                <button onClick={permit}>Permit</button>
             <br></br>
             <h2></h2>
             <h2>Mint NFT</h2>
