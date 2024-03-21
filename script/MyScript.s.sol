@@ -9,6 +9,7 @@ import "../contract/v2-swap/NFTMarket.sol";
 import "../contract/v2-swap/uniswpV2/UniswapV2Router02.sol";
 import "../contract/v2-swap/uniswpV2/UniswapV2Factory.sol";
 import "../contract/v2-swap/uniswpV2/WETH9.sol";
+import "../contract/v2-swap/Bank.sol";
 
 contract MyScript is Script {
     function run() external {
@@ -20,6 +21,9 @@ contract MyScript is Script {
         MyEIP2612 token = new MyEIP2612("Dragon", "DRG");
         console.log("token:");
         console.log(address(token));
+        Bank bank = new Bank(address(token));
+        console.log("bank:");
+        console.log(address(bank));
         MyERC721 erc721token = new MyERC721();
         console.log("erc721token:");
         console.log(address(erc721token));

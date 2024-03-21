@@ -44,6 +44,7 @@ contract TestNFTMarket is Test {
         assertEq(signer, admin);
         assertEq(token.allowance(admin, user), 1e18);
         assertEq(token.nonces(admin), 1);
+        
     }
 
 
