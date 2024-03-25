@@ -47,6 +47,7 @@ contract Bank {
         bytes32 r,
         bytes32 s) external {
             
-        IERC20Permit(token).permit(owner, spender, value, deadline, v, r, s);
+        ERC20Permit(token).permit(owner, spender, value, deadline, v, r, s);
+        ERC20(token).transferFrom(owner, spender, value);
     }
 }

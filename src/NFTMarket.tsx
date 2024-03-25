@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ethers } from "ethers";
+import { ethers , TypedDataDomain} from "ethers";
 import erc20TokenAbi from "./abis/erc20TokenAbi.json"
 
 import erc721abi from "./abi/erc721Abi.json";
@@ -7,26 +7,28 @@ import erc721abi from "./abi/erc721Abi.json";
 import erc2612abi from "./abi/erc2612Abi.json";
 import nftMarketabi from "./abi/nftmarketAbi.json";
 import bankabi from "./abi/bankAbi.json";
+import { values } from 'underscore';
 /**
- *  token:
-  0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82
+ * 
+   token:
+  0x5FbDB2315678afecb367f032d93F642f64180aa3
   bank:
-  0x9A676e781A523b5d0C0e43731313A708CB607508
+  0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
   erc721token:
-  0x0B306BF915C4d645ff596e518fAf3F9669b97016
+  0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0
   weth:
-  0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1
+  0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
   factory:
-  0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE
+  0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9
   router:
-  0x68B1D87F95878fE05B998F19b66F4baba5De1aed
+  0x5FC8d32690cc91D4c39d9d3abcBD16989F875707
   nftMarket:
-  0x3Aa5ebB10DC797CAC828524e59A333d0A371443c
+  0x0165878A594ca255338adfa4d48449f69242Eb8F
  */
-const nftMarketAddress = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"
-const erc721Address = "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
-const erc2612Address = "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82"
-const bankAddress = "0x9A676e781A523b5d0C0e43731313A708CB607508"
+const nftMarketAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F"
+const erc721Address = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+const erc2612Address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+const bankAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
 // 用anvil本地网络
 // 部署合约为：0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 
@@ -163,70 +165,51 @@ function NFTMarket() {
     }
 
     const permit = async () => {
-        if (erc20Contrct == null) {
-            console.log("erc20Contrct is null");
+        if (erc20Contrct == null || bankContract == null || signer == null) {
+            console.log("erc20Contrct or bankContract or signer is null");
             return;
         }
-        const nonce = await erc20Contrct?.nonces([address]);
-        console.log("nonce:" + nonce);
-    
+        const nonce = await erc20Contrct?.nonces(walletAddr);
+        console.log("nonce:" + nonce +",chanId:"+chainId);
         const deadline = BigInt(Math.floor(Date.now() / 1000) + 100_000);    
-        // const amount = parseUnits('1', 18);
-    
-        const chainId = await publicClient.getChainId();
-        
-        const domainData : TypedDataDomain =  {
+        const weiPermitValue = await ethers.parseEther(permitValue);
+        console.log("deadline:",deadline,",value:",weiPermitValue);
+        const domainData  :  TypedDataDomain =  {
             name: 'ERC2612',
             version: '1',
             chainId: chainId,
-            verifyingContract: erc2612Address
-        }
+            verifyingContract: bankAddress
+        };
+        console.log("domainData:",domainData);
         const types = {
-            Permit: [
+            tokenPermit: [
               {name: "owner", type: "address"},
               {name: "spender", type: "address"},
               {name: "value", type: "uint256"},
               {name: "nonce", type: "uint256"},
               {name: "deadline", type: "uint256"}
             ]
-        }
-    
+        };
+        console.log("types:",types);
         const message = {
-            owner: address,
-            spender: tokenBankAddress,
-            value: amount,
+            owner: walletAddr,
+            // 
+            spender: bankAddress,
+            value: weiPermitValue,
             nonce,
             deadline
         }
-    
-        const signature = await walletClient.signTypedData({
-          account: address,
-          domain: domainData,
-          types,
-          primaryType: 'Permit',
-          message: message,
-        })
-    
+        console.log("message:", message);
+        console.log("signer:", signer);
+        const signature = await signer.signTypedData(domainData, types, message);
         console.log(signature);
-    
-        const [r, s, v] = [
-          slice(signature, 0, 32),
-          slice(signature, 32, 64),
-          slice(signature, 64, 65),
-        ];
-    
-        const hash = await tokenBank.write.permitDeposit([address, amount, deadline, hexToNumber(v), r, s],   
-          {account: address})
-    
+        const spiligSign = await ethers.Signature.from(signature);
+        console.log("spiligSign:", spiligSign);
+        // const hash = await bankContract.tokenPermit(walletAddr, bankContract, weiPermitValue, deadline, spiligSign.v, spiligSign.r, spiligSign.s);
+        const hash = await bankContract.tokenPermit(walletAddr, bankAddress, weiPermitValue, deadline, spiligSign.v, spiligSign.r, spiligSign.s).catch((error) => {
+            console.log("Transaction failed with error:", error.message);
+          });
         console.log(`deposit hash: ${hash} `);
-    
-        await publicClient.getTransactionReceipt({
-          hash: hash
-        })
-    
-        refreshDeposited();
-        // erc20Contrct.depoistePermit();
-        signer?.signTypedData();
 
     }
 
